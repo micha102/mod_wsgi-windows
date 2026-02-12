@@ -81,10 +81,17 @@ jobs:
         run: |
           Write-Host "Downloading $env:LATEST_APACHE"
           curl.exe -L $env:LATEST_APACHE -o apache.zip
-          Expand-Archive apache.zip -DestinationPath .
+          # Extract to Apache24 folder (matches APACHE_DIR)
+          $apachePath = Join-Path $env:GITHUB_WORKSPACE "Apache24"
+          Expand-Archive apache.zip -DestinationPath $apachePath
+          Write-Host "Apache extracted to $apachePath"
 
       - name: Set Apache root for mod_wsgi build
-        run: echo "MOD_WSGI_APACHE_ROOTDIR=${APACHE_DIR}" >> $env:GITHUB_ENV
+        shell: pwsh
+        run: |
+          $apachePath = Join-Path $env:GITHUB_WORKSPACE "Apache24"
+          Write-Host "Setting MOD_WSGI_APACHE_ROOTDIR = $apachePath"
+          echo "MOD_WSGI_APACHE_ROOTDIR=$apachePath" >> $env:GITHUB_ENV
 
       - name: Install build dependencies & build mod_wsgi
         run: |
