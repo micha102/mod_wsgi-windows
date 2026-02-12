@@ -22,23 +22,66 @@ jobs:
 
       - name: Verify Python (64-bit)
         run: python -c "import struct; print('Python bits:', struct.calcsize('P')*8)"
-
-      - name: Find latest Apache Lounge Win64 URL
-        id: find_apache
+      
+      - name: Find latest Apache Lounge Win64 httpd
+        shell: pwsh
         run: |
-          # scrape Apache Lounge download HTML for Win64-vs*.zip
-          LATEST=$(curl -s https://www.apachelounge.com/download/ | \
-            grep -oP 'href="[^"]*Win64-VS[^"]+\.zip' | \
-            sed 's/href="//' | sort | uniq | tail -n1)
-          echo "LATEST_APACHE=https://www.apachelounge.com/${LATEST}" >> $GITHUB_ENV
-          echo "Found: $LATEST"
+          $html = curl.exe -L https://www.apachelounge.com/download/
 
-      - name: Download latest Apache Win64
+          $pattern = 'href="([^"]*httpd-[^"]*Win64-VS\d+\.zip)"'
+          $matches = [regex]::Matches($html, $pattern)
+
+          if ($matches.Count -eq 0) {
+              Write-Error "No matching Win64 httpd zip found!"
+              exit 1
+          }
+
+          # Force array even if single match
+          $links = @($matches | ForEach-Object { $_.Groups[1].Value })
+
+          # Sort by Apache version number
+          $links = @($links | Sort-Object {
+              if ($_ -match 'httpd-(\d+\.\d+\.\d+)') {
+                  [version]$matches[1]
+              } else {
+                  [version]"0.0.0"
+              }
+          })
+
+          # Pick the latest
+          $latest = $links[-1]
+
+          if ($latest -notmatch "^http") {
+              $latest = "https://www.apachelounge.com$latest"
+          }
+
+          Write-Host "Latest Apache URL: $latest"
+
+          # Extract version info for naming
+          if ($latest -match 'httpd-(\d+\.\d+\.\d+)-(\d+)-Win64-(VS\d+)') {
+              $apacheVersion = $Matches[1]
+              $buildTag      = $Matches[2]
+              $vsVersion     = $Matches[3]
+
+              Write-Host "Apache Version: $apacheVersion"
+              Write-Host "Build Tag: $buildTag"
+              Write-Host "Compiler: $vsVersion"
+
+              echo "APACHE_VERSION=$apacheVersion" >> $env:GITHUB_ENV
+              echo "APACHE_BUILD=$buildTag" >> $env:GITHUB_ENV
+              echo "APACHE_VS=$vsVersion" >> $env:GITHUB_ENV
+          }
+
+          echo "LATEST_APACHE=$latest" >> $env:GITHUB_ENV
+
+
+
+      - name: Download Apache
+        shell: pwsh
         run: |
-          echo "Downloading $LATEST_APACHE"
-          curl -L -o apache.zip "$LATEST_APACHE"
-          tar -xf apache.zip
-          dir
+          Write-Host "Downloading $env:LATEST_APACHE"
+          curl.exe -L $env:LATEST_APACHE -o apache.zip
+          Expand-Archive apache.zip -DestinationPath .
 
       - name: Set Apache root for mod_wsgi build
         run: echo "MOD_WSGI_APACHE_ROOTDIR=${APACHE_DIR}" >> $env:GITHUB_ENV
