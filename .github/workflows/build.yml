@@ -98,13 +98,26 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install mod_wsgi
 
-      - name: Show compiled module location
-        run: python -c "import mod_wsgi; print(mod_wsgi.__file__)"
-
-      - name: Collect mod_wsgi module
+      - name: Test mod_wsgi import
+        shell: pwsh
         run: |
-          mkdir output
-          for /r %i in (*.pyd) do copy "%i" output\
+          python - <<EOF
+          try:
+              import mod_wsgi
+              print("mod_wsgi imported successfully from:", mod_wsgi.__file__)
+          except Exception as e:
+              raise SystemExit(f"ERROR: Failed to import mod_wsgi: {e}")
+          EOF
+        
+      - name: Collect mod_wsgi wheel
+        shell: pwsh
+        run: |
+          $wheelPath = Get-ChildItem -Path "$env:LOCALAPPDATA\pip\cache\wheels" -Recurse -Filter "*.whl" |
+                       Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          Write-Host "Found wheel: $($wheelPath.FullName)"
+          $outputDir = Join-Path $env:GITHUB_WORKSPACE "output"
+          New-Item -ItemType Directory -Force -Path $outputDir
+          Copy-Item $wheelPath.FullName -Destination $outputDir
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
