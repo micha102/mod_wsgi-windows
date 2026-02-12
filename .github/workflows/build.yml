@@ -1,0 +1,42 @@
+name: Build mod_wsgi Win32 Python 3.13
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13 (32-bit)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.0"
+          architecture: "x86"
+
+      - name: Verify Python architecture
+        run: python -c "import struct; print('Python bits:', struct.calcsize('P')*8)"
+
+      - name: Install mod_wsgi
+        run: pip install mod_wsgi
+
+      - name: Show module config
+        run: mod_wsgi-express module-config
+
+      - name: Locate built module
+        run: |
+          python -c "import mod_wsgi; print(mod_wsgi.__file__)"
+
+      - name: Collect module artifact
+        run: |
+          mkdir output
+          for /r %i in (*.pyd) do copy "%i" output\
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod_wsgi-win32-python313
+          path: output
