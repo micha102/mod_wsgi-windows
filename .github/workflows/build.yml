@@ -81,9 +81,9 @@ jobs:
         run: |
           Write-Host "Downloading $env:LATEST_APACHE"
           curl.exe -L $env:LATEST_APACHE -o apache.zip
-          # Extract to Apache24 folder (matches APACHE_DIR)
+          Expand-Archive apache.zip .
           $apachePath = Join-Path $env:GITHUB_WORKSPACE "Apache24"
-          Expand-Archive apache.zip -DestinationPath $apachePath
+          dir $apachePath
           Write-Host "Apache extracted to $apachePath"
 
       - name: Set Apache root for mod_wsgi build
