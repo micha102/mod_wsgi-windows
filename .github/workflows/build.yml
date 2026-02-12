@@ -88,9 +88,11 @@ jobs:
           $outputDir = Join-Path $env:GITHUB_WORKSPACE "output"
           New-Item -ItemType Directory -Force -Path $outputDir
           Copy-Item $wheelPath.FullName -Destination $outputDir
+          # Save the filename for upload
+          echo "WHEEL_FILE=$($wheelPath.Name)" >> $env:GITHUB_ENV
 
       - name: Upload mod_wsgi wheel
         uses: actions/upload-artifact@v4
         with:
-            name: mod_wsgi-win64-${{ matrix.python-version }}
-            path: output/*.whl
+          name: ${{ env.WHEEL_FILE }}
+          path: output/${{ env.WHEEL_FILE }}
