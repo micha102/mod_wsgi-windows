@@ -111,8 +111,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path $outputDir
           Copy-Item $wheelPath.FullName -Destination $outputDir
 
-      - name: Upload artifact
+      - name: Upload mod_wsgi wheel
         uses: actions/upload-artifact@v4
         with:
-          name: mod_wsgi-win64-py313
-          path: output
+            name: mod_wsgi-win64-py313
+            path: output/*.whl
