@@ -77,14 +77,7 @@ jobs:
           pip install mod_wsgi
 
       - name: Test python import
-        run: |
-          python - <<EOF
-          try:
-              import mod_wsgi
-              print("mod_wsgi imported successfully from:", mod_wsgi.__file__)
-          except Exception as e:
-              raise SystemExit(f"ERROR: Failed to import mod_wsgi: {e}")
-          EOF
+        run: python -c "import mod_wsgi; print(mod_wsgi.__file__)"
 
       - name: Collect mod_wsgi wheel
         shell: pwsh
