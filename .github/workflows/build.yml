@@ -1,4 +1,4 @@
-name: Build mod_wsgi Win32 Python 3.13
+name: Build mod_wsgi Win64 Python 3.13
 
 on:
   workflow_dispatch:
@@ -7,30 +7,51 @@ jobs:
   build:
     runs-on: windows-latest
 
+    env:
+      APACHE_DIR: ${{ github.workspace }}\Apache24
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.13 (32-bit)
+      - name: Setup Python 3.13 (64-bit)
         uses: actions/setup-python@v5
         with:
           python-version: "3.13.0"
-          architecture: "x86"
+          architecture: "x64"
 
-      - name: Verify Python architecture
+      - name: Verify Python (64-bit)
         run: python -c "import struct; print('Python bits:', struct.calcsize('P')*8)"
 
-      - name: Install mod_wsgi
-        run: pip install mod_wsgi
-
-      - name: Show module config
-        run: mod_wsgi-express module-config
-
-      - name: Locate built module
+      - name: Find latest Apache Lounge Win64 URL
+        id: find_apache
         run: |
-          python -c "import mod_wsgi; print(mod_wsgi.__file__)"
+          # scrape Apache Lounge download HTML for Win64-vs*.zip
+          LATEST=$(curl -s https://www.apachelounge.com/download/ | \
+            grep -oP 'href="[^"]*Win64-VS[^"]+\.zip' | \
+            sed 's/href="//' | sort | uniq | tail -n1)
+          echo "LATEST_APACHE=https://www.apachelounge.com/${LATEST}" >> $GITHUB_ENV
+          echo "Found: $LATEST"
 
-      - name: Collect module artifact
+      - name: Download latest Apache Win64
+        run: |
+          echo "Downloading $LATEST_APACHE"
+          curl -L -o apache.zip "$LATEST_APACHE"
+          tar -xf apache.zip
+          dir
+
+      - name: Set Apache root for mod_wsgi build
+        run: echo "MOD_WSGI_APACHE_ROOTDIR=${APACHE_DIR}" >> $env:GITHUB_ENV
+
+      - name: Install build dependencies & build mod_wsgi
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install mod_wsgi
+
+      - name: Show compiled module location
+        run: python -c "import mod_wsgi; print(mod_wsgi.__file__)"
+
+      - name: Collect mod_wsgi module
         run: |
           mkdir output
           for /r %i in (*.pyd) do copy "%i" output\
@@ -38,5 +59,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mod_wsgi-win32-python313
+          name: mod_wsgi-win64-py313
           path: output
