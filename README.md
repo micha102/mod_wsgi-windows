@@ -1,9 +1,16 @@
-Python Windows wheels for mod_wsgi on Apache httpd.
-Compiled with Github Actions.
-The workflow detects the last httpd version released by Apache Lounge and compiles mod_wsgi for the Python version I like (for now it's Python 3.13 and 3.14)
-I compile it for the bitness I like, too. Which is x64 (amd64)
-GrahamDumpleton/mod_wsgi (thanks!) provides [source code](https://github.com/GrahamDumpleton/mod_wsgi) for building it, so please use it, try your maximum to compile from source, unless impossible.
+# mod_wsgi Windows Wheels for Apache HTTPD
 
-In my case, it's impossible for me to install Windows Build tools on a Production VM. So I must compiled outside Prod then install it there.
+Python Windows wheels for **mod_wsgi** on **Apache httpd**, compiled with **GitHub Actions**.  
 
-To download wheels, go to the [Releases](https://github.com/micha102/mod_wsgi-windows/releases) section.
+The workflow automatically:
+
+- Detects the latest **Apache HTTPD** version released by [Apache Lounge](https://www.apachelounge.com/download/).  
+- Compiles **mod_wsgi** for the Python versions I select (currently **Python 3.13** and **3.14**).  
+- Builds for the bitness I choose — in this case, **x64 (amd64)**.  
+
+Thanks to [GrahamDumpleton/mod_wsgi](https://github.com/GrahamDumpleton/mod_wsgi) for the source code. Please use it and try to compile from source whenever possible.  
+
+> In my case, installing Windows build tools on a Production VM is impossible.  
+> Therefore, I must compile outside of Production and then install the wheels there.  
+
+To download precompiled wheels, visit the [Releases](https://github.com/micha102/mod_wsgi-windows/releases) section.
