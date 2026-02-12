@@ -10,6 +10,8 @@ The workflow automatically:
 
 Thanks to [GrahamDumpleton/mod_wsgi](https://github.com/GrahamDumpleton/mod_wsgi) for the source code. Please use it and try to compile from source whenever possible.  
 
+DON'T TRUST RANDOM BINARIES ON THE INTERNET!
+
 > In my case, installing Windows build tools on a Production VM is impossible.  
 > Therefore, I must compile outside of Production and then install the wheels there.  
 
